@@ -14,7 +14,6 @@ import { MapLabelControl } from './controls/map_label_control.js';
 import { PlaneControl } from './controls/plane_control.js';
 import { RegionLabelsControl } from './controls/region_labels_control.js';
 import { RegionLookupControl } from './controls/region_lookup_control.js';
-import { TitleLabel } from './controls/title_label.js';
 import { Region } from './model/Region.js';
 
 // Base URL tiles are fetched from, e.g. 'https://tiles.example.com' -> '.../{plane}/{z}/{x}/{y}.png'.
@@ -73,7 +72,6 @@ $(document).ready(function () {
 
     initEmbedOverlays(map);
 
-    map.addControl(new TitleLabel());
     map.addControl(new CoordinatesControl());
     map.addControl(new RegionBaseCoordinatesControl());
     map.addControl(new LocalCoordinatesControl());

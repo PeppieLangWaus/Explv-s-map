@@ -1,7 +1,5 @@
 'use strict';
 
-import {Position} from './Position.js';
-
 export class Path {
 
     constructor(map) {

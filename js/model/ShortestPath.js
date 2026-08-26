@@ -1,9 +1,7 @@
 'use strict';
+import { getPath } from '../shortest-path/shortest-path.js';
 
-import { Position } from './Position.js';
-import { getPath } from '../dax_walker/dax_walker.js';
-
-export class DaxPath {
+export class ShortestPath {
 
     constructor(map) {
         this.map = map;
