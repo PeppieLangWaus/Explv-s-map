@@ -1,6 +1,7 @@
 'use strict';
 
 import { Position } from './model/Position.js';
+import { initEmbedOverlays } from './embed_overlays.js';
 
 // Import controls
 import { CollectionControl } from './controls/collection_control.js';
@@ -26,6 +27,18 @@ $(document).ready(function () {
     const urlZoom = currentUrl.searchParams.get("zoom");
 
     const urlRegionID = currentUrl.searchParams.get("regionID");
+
+    // Embedding callers (e.g. an <iframe>) can't reach into this page's DOM to hide the UI
+    // themselves, since it's served from a different origin — so support hiding it ourselves
+    // via a URL param instead. Defaults to shown; only `controls=false` hides it.
+    const showControls = currentUrl.searchParams.get("controls") !== "false";
+    if (!showControls) {
+        document.body.classList.add('hide-controls');
+    }
+
+    // Same idea, but just for the location-name labels — lets an embedder start the map
+    // with labels off (e.g. `labels=false`) without hiding the rest of the UI.
+    const showLabels = currentUrl.searchParams.get("labels") !== "false";
 
     var map = L.map('map', {
         //maxBounds: L.latLngBounds(L.latLng(-40, -180), L.latLng(85, 153))
@@ -53,6 +66,8 @@ $(document).ready(function () {
     map.updateMapPath();
     map.getContainer().focus();
 
+    initEmbedOverlays(map);
+
     map.addControl(new TitleLabel());
     map.addControl(new CoordinatesControl());
     map.addControl(new RegionBaseCoordinatesControl());
@@ -60,28 +75,30 @@ $(document).ready(function () {
     map.addControl(L.control.zoom());
     map.addControl(new PlaneControl());
     map.addControl(new LocationLookupControl());
-    map.addControl(new MapLabelControl());
+    map.addControl(new MapLabelControl({ enabled: showLabels }));
     map.addControl(new CollectionControl({ position: 'topright' }));
     map.addControl(new RegionLookupControl());
     map.addControl(new GridControl());
     map.addControl(new RegionLabelsControl());
 
     var prevMouseRect, prevMousePos;
-    map.on('mousemove', function (e) {
-        var mousePos = Position.fromLatLng(map, e.latlng, map.plane);
+    if (showControls) {
+        map.on('mousemove', function (e) {
+            var mousePos = Position.fromLatLng(map, e.latlng, map.plane);
 
-        if (prevMousePos !== mousePos) {
+            if (prevMousePos !== mousePos) {
 
-            prevMousePos = mousePos;
+                prevMousePos = mousePos;
 
-            if (prevMouseRect !== undefined) {
-                map.removeLayer(prevMouseRect);
+                if (prevMouseRect !== undefined) {
+                    map.removeLayer(prevMouseRect);
+                }
+
+                prevMouseRect = mousePos.toLeaflet(map);
+                prevMouseRect.addTo(map);
             }
-
-            prevMouseRect = mousePos.toLeaflet(map);
-            prevMouseRect.addTo(map);
-        }
-    });
+        });
+    }
 
     const setUrlParams = () => {
         const mapCentre = map.getBounds().getCenter()

@@ -40,7 +40,7 @@ export class DaxPath {
                     Swal({
                         position: 'top',
                         type: 'error',
-                        title: `Failed to get path between ${start} and ${end} from Dax.\nReason: '${errorMsg}'`,
+                        title: `Failed to get path between ${start} and ${end}.\nReason: '${errorMsg}'`,
                         showConfirmButton: false,
                         timer: 6000,
                         toast: true,

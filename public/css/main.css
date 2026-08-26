@@ -15,6 +15,36 @@ html, body {
     height: 100%;
 }
 
+/* Set via ?controls=false — lets embedders (e.g. an <iframe>) hide all Leaflet controls
+   (zoom, plane switch, search, coordinates, title label, etc.) without reaching into this
+   page's DOM, which they can't do across origins. */
+body.hide-controls .leaflet-control-container {
+    display: none;
+}
+
+/* Optional caption set by an embedding parent via postMessage (see embed_overlays.js).
+   Sits above the map tiles but doesn't intercept clicks/drags. */
+#embed-description-banner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    box-sizing: border-box;
+    max-width: 100%;
+    width: fit-content;
+    padding: 1px 8px 3px 5px;
+    background-color: rgba(0, 0, 0, 0.75);
+    border-bottom-right-radius: 8px 8px;
+    color: #FFFFFF;
+    font-size: 12px;
+    text-align: left;
+    text-shadow: 2px #000;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+}
+
 .ui-autocomplete {
     z-index: 2000;
     border: 1px solid #ffffff;
