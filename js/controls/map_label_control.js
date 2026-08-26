@@ -101,7 +101,10 @@ var MapLabelsCanvas = CanvasLayer.extend({
 
 export var MapLabelControl = L.Control.extend({
     options: {
-        position: 'topleft'
+        position: 'topleft',
+        // Lets callers (e.g. the `labels=false` embed URL param) start the map with labels
+        // already hidden, without having to click the button after load.
+        enabled: true
     },
 
     onAdd: function (map) {
@@ -118,12 +121,16 @@ export var MapLabelControl = L.Control.extend({
 
         L.DomEvent.on(labelsButton, 'click', this._toggleMapLabels, this);
 
-        this._enabled = true;
+        this._enabled = this.options.enabled;
 
         L.DomEvent.disableClickPropagation(container);
 
         this._mapLabelsCanvas = new MapLabelsCanvas({ pane: "map-labels" });
         this._map.addLayer(this._mapLabelsCanvas);
+
+        if (!this._enabled) {
+            map.getPane("map-labels").style.display = "none";
+        }
 
         map.on('planeChanged', function () {
             this._mapLabelsCanvas.drawLayer();
