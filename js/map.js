@@ -16,6 +16,11 @@ import { RegionLookupControl } from './controls/region_lookup_control.js';
 import { TitleLabel } from './controls/title_label.js';
 import { Region } from './model/Region.js';
 
+// Base URL tiles are fetched from, e.g. 'https://tiles.example.com' -> '.../{plane}/{z}/{x}/{y}.png'.
+// Defaults to Explv's upstream GitHub-hosted tiles; set VITE_TILE_BASE_URL at build time to point
+// at a self-hosted osrs_map_tiles instance instead (no trailing slash).
+const TILE_BASE_URL = import.meta.env.VITE_TILE_BASE_URL || 'https://raw.githubusercontent.com/Explv/osrs_map_tiles/master';
+
 $(document).ready(function () {
 
     const currentUrl = new URL(window.location.href);
@@ -39,7 +44,7 @@ $(document).ready(function () {
         if (map.tile_layer !== undefined) {
             map.removeLayer(map.tile_layer);
         }
-        map.tile_layer = L.tileLayer('https://raw.githubusercontent.com/Explv/osrs_map_tiles/master/' + map.plane + '/{z}/{x}/{y}.png', {
+        map.tile_layer = L.tileLayer(TILE_BASE_URL + '/' + map.plane + '/{z}/{x}/{y}.png', {
             minZoom: 4,
             maxZoom: 11,
             attribution: 'Map data',
