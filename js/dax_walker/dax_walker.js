@@ -2,49 +2,73 @@
 
 import { Position } from '../model/Position.js';
 
-const API_URL = "https://explv-map.siisiqf.workers.dev/";
+const API_URL = "https://osrspathfinder.com/find-path";
 
 const errorMessageMapping = {
-    "UNMAPPED_REGION": "Unmapped region",
     "BLOCKED": "Tile is blocked",
-    "EXCEEDED_SEARCH_LIMIT": "Exceeded search limit",
     "UNREACHABLE": "Unreachable tile",
-    "NO_WEB_PATH" : "No web path",
-    "INVALID_CREDENTIALS": "Invalid credentials",
-    "RATE_LIMIT_EXCEEDED": "Rate limit exceeded",
     "NO_RESPONSE_FROM_SERVER": "No response from server",
     "UNKNOWN": "Unknown"
 };
 
+// Flattens the response's steps (alternating WALK tile-paths and LINK jumps such as
+// doors/stairs/ships/teleports) into a single ordered list of Positions.
+function flattenSteps(steps) {
+    const positions = [];
+
+    for (const step of steps) {
+        if (step.type === 'WALK') {
+            for (const point of step.path) {
+                positions.push(new Position(point.x, point.y, step.plane));
+            }
+        } else if (step.type === 'LINK') {
+            // The preceding WALK step (if any) already ends at link.start, so only the far
+            // side of the link needs to be added - it may land on a different plane.
+            const end = step.link.end;
+            positions.push(new Position(end.x, end.y, end.plane));
+        }
+    }
+
+    return positions;
+}
+
 export function getPath({start, end, onSuccess, onError}) {
-    $.ajax({
-        url: API_URL,
-        type: 'POST',
-        data: JSON.stringify({
+    fetch(API_URL, {
+        method: 'POST',
+        headers: {
+            'accept': 'application/json',
+            'content-type': 'application/json'
+        },
+        body: JSON.stringify({
             "start": {
                 "x": start.x,
                 "y": start.y,
-                "z": start.z
+                "plane": start.z
             },
             "end": {
                 "x": end.x,
                 "y": end.y,
-                "z": end.z
+                "plane": end.z
             },
-            "player": {
-                "members": true
+            "algo": "A_STAR"
+        })
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('NO_RESPONSE_FROM_SERVER');
             }
-        }),
-        dataType: 'json',
-        contentType: 'application/json',
-        success: function (data) {
-            if (data['pathStatus'] !== "SUCCESS") {
-                onError(start, end, errorMessageMapping[data['pathStatus']]);
+            return response.json();
+        })
+        .then(data => {
+            const result = data['result'];
+
+            if (result['type'] !== 'SUCCESS') {
+                onError(start, end, errorMessageMapping[result['type']] || errorMessageMapping['UNKNOWN']);
             } else {
-                const path = data['path'];
-                const pathPositions = path.map(pos => new Position(pos.x, pos.y, pos.z));
-                onSuccess(pathPositions);
+                onSuccess(flattenSteps(result['steps']));
             }
-        }
-    });
+        })
+        .catch(() => {
+            onError(start, end, errorMessageMapping['NO_RESPONSE_FROM_SERVER']);
+        });
 }
